@@ -6,7 +6,9 @@
 1. [프로젝트 생성](#1-프로젝트-생성)  
 2. [라이브러리 설정](#2-라이브러리-설정)  
 3. [View Page 설정](#3-view-page-설정)  
-4. [빌드 및 실행](#4-빌드-및-실행)  
+4. [빌드 및 실행](#4-빌드-및-실행)
+5. [스프링 웹 개발 기초](#5-스프링-웹-개발기초)  
+5-1. [정적 컨텐츠](#5-1-정적-컨텐츠static-content)  
 
 ### 1. 프로젝트 생성  
  - [start.spring.io](https://start.spring.io/) 를 통해 Gradle 프로젝트 생성  
@@ -138,3 +140,69 @@
 
  - Reference  
    [oliviarla 윈도우에서 빌드하고 실행하기](https://velog.io/@oliviarla/spring-boot%EC%9C%88%EB%8F%84%EC%9A%B0%EC%97%90%EC%84%9C-%EB%B9%8C%EB%93%9C%ED%95%98%EA%B3%A0-%EC%8B%A4%ED%96%89%ED%95%98%EA%B8%B0)  
+
+### 5. 스프링 웹 개발 기초
+ - 정적 컨텐츠(Static Content)  
+   ```
+   서버에서 파일 '그대로' 웹 브라우저에 내려주는 것 (가공 X)  
+   
+   Ex) Spring Boot - WelcomePage
+   ```
+ - MVC와 템플릿 엔진  
+   ```
+   템플릿 엔진 - JSP, PHP 등... 
+   HTML을 서버에서 '프로그래밍해서 동적으로 바꾸어' 내려주는 것 
+   
+   이러한 템플릿 엔진의 기능을 사용하기 위해 MVC 패턴(Controller, Model, View)을 사용
+   ```
+ - API
+   ```
+   json 포맷형식으로 클라이언트에게 데이터를 전달하는 방식  
+   (과거에는 xml 포맷도 사용했음)
+   
+   Ex) 최근 vue.js, react 사용시 api 방식으로 데이터를 전달하면
+       화면은 클라이언트가 그리는 방식으로 많이 사용
+       
+       서버끼리 통신시 많이 사용(어떤 데이터가 왔다갔다하는지가 중요하기 때문에)
+   ```
+
+### 5-1. 정적 컨텐츠(Static Content)  
+ - 스프링 부트 정적 컨텐츠 기능 [Static Content 참고](https://docs.spring.io/spring-boot/docs/2.3.12.RELEASE/reference/html/spring-boot-features.html#boot-features)  
+   ![static 폴더 위치](https://velog.velcdn.com/images%2Fsong22861%2Fpost%2F168caf2a-d196-44cf-9281-ceb18d2dbc04%2FScreen%20Shot%202022-03-15%20at%2010.11.00%20PM.png)  
+   [이미지 출처](https://velog.io/@song22861/5%ED%8E%B8-JAVA-spring-boot-study-%EC%A0%95%EC%A0%81-%EC%BB%A8%ED%85%90%EC%B8%A0)  
+     
+   ```
+   Spring Boot는 기본적으로 
+   classpath 의 /static or /public or /resources or /META-INF/resources 디렉토리
+   또는 ServletContext의 root에서 정적 컨텐츠를 제공함
+   
+   즉, src/main/resources/static 경로의 내부 파일에 대해 정적 컨텐츠 기능을 사용할 수 있음
+   
+   예를 들어 localhost:8080/hello-static.html을 웹 브라우저에 입력시 hello-static.html 파일을 
+   웹브라우저가 그대로 출력하는 것을 볼 수 있음
+   ```
+ - 정적 컨텐츠 동작 원리
+   ![image](https://user-images.githubusercontent.com/65080004/164480918-22b3f515-27c3-4b58-9d9b-00b3c2585814.png)  
+   ```
+   1. 웹 브라우저에서 localhost:8080/hello-static.html을 요청
+   
+   2. 내장된 톰캣 서버가 해당 요청을 받음
+   
+   3. 톰캣 서버는 받은 요청을 스프링 컨테이너에게 넘김
+   
+   4. 스프링 컨테이너는 @Controller 쪽에서 해당 요청과 관련된 컨트롤러가 있는지 확인  
+      (요청과 Mapping 된 것이 있는지 확인  즉, 컨트롤러가 먼저 우선순위를 갖는다!)  
+   
+   5. 스프링 컨테이너는 해당 요청과 관련된 컨트롤러가 없다고 판단
+   
+   6. resources/static 접근하여 해당 요청과 관련된 파일이 있는지 확인
+   
+   7. 해당 요청과 관련된 것이 존재할경우 웹브라우저에 리턴 
+   ```  
+ 
+ - [정적 컨텐츠 커스텀](https://atoz-develop.tistory.com/entry/spring-boot-web-mvc-static-resources) 관련 내용 링크  
+
+  
+ - Reference  
+   [song22861 정적컨텐츠](https://velog.io/@song22861/5%ED%8E%B8-JAVA-spring-boot-study-%EC%A0%95%EC%A0%81-%EC%BB%A8%ED%85%90%EC%B8%A0)  
+   [추가정보 Knowledge Repository 정적 컨텐츠 커스텀](https://atoz-develop.tistory.com/entry/spring-boot-web-mvc-static-resources)  
