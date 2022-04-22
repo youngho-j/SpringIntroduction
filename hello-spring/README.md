@@ -9,6 +9,7 @@
 4. [빌드 및 실행](#4-빌드-및-실행)
 5. [스프링 웹 개발 기초](#5-스프링-웹-개발기초)  
 5-1. [정적 컨텐츠](#5-1-정적-컨텐츠static-content)  
+5-2. [MVC와 템플릿 엔진](#5-2-mvc와-템플릿-엔진)  
 
 ### 1. 프로젝트 생성  
  - [start.spring.io](https://start.spring.io/) 를 통해 Gradle 프로젝트 생성  
@@ -206,3 +207,53 @@
  - Reference  
    [song22861 정적컨텐츠](https://velog.io/@song22861/5%ED%8E%B8-JAVA-spring-boot-study-%EC%A0%95%EC%A0%81-%EC%BB%A8%ED%85%90%EC%B8%A0)  
    [추가정보 Knowledge Repository 정적 컨텐츠 커스텀](https://atoz-develop.tistory.com/entry/spring-boot-web-mvc-static-resources)  
+   
+### 5-2. MVC와 템플릿 엔진  
+ - MVC  
+   `Model`, `View`, `Controller`  
+   웹에서 화면을 출력하기 위해 내용을 담고, 보여주고, 전달해주는 소프트웨어 구현 방식중 하나
+   - Model  
+     화면에 필요한 정보를 담는 역할  
+       
+   - View  
+     화면 출력에 중점을 둠
+     
+   - Controller   
+     비즈니스 로직과 서버와 관련된 일
+     
+
+   - 정리  
+     `Controller, Model`  
+     > 내부적인 것 (비즈니스 로직, 서버단 관련 일 등..)을 처리하는데 집중
+     
+     `View`
+     > 화면을 그리는데 집중
+ 
+ - MVC 동작 원리
+   ![image](https://user-images.githubusercontent.com/65080004/164721239-ee6788c9-0154-48e2-961a-ca1efdc42ac0.png)  
+   ```
+   1. 웹 브라우저에서 localhost:8080/hello-mvc을 요청
+   
+   2. 내장된 톰캣 서버가 해당 요청을 받음
+   
+   3. 톰캣 서버는 받은 요청을 스프링 컨테이너에게 넘김
+   
+   4. 스프링 컨테이너는 @Controller 쪽에서 해당 요청과 관련된 컨트롤러가 있는지 확인  
+      (요청과 Mapping 된 것이 있는지 확인  즉, 컨트롤러가 먼저 우선순위를 갖는다!)  
+   
+   5. 스프링 컨테이너는 해당 요청과 맵핑된 컨트롤러가 있으면 해당 메서드 호출
+   
+   6. 호출한 메서드의 return 값과 model 값을 viewResolver에 전달  
+      viewResolver  
+      : view를 찾아주고, 템플릿 엔진을 연결시켜주는 역할
+   
+   7. viewResolver는 return 값과 같은 이름의 templates/hello-template.html 찾아서
+      템플릿 엔진에게 넘겨줌
+   
+   8. 템플릿 엔진이 렌더링을 해 '변환'을 한 HTML을 웹브라우저에 반영한다.
+   ```
+ 
+ - 템플릿 엔진  
+   템플릿 양식과 특정 데이터 모델에 따른 입력 자료를 합성하여 결과 문서를 출력하는 소프르웨어  
+   > 쉽게 말해 html 파일을 브라우저로 그냥 보내주는 것이 아닌,  
+     `서버에서 프로그래밍을 통해 동적으로 바꾸어서 보내주는 역할` 이라고 보면 된다.
