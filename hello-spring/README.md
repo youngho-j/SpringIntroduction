@@ -10,6 +10,7 @@
 5. [스프링 웹 개발 기초](#5-스프링-웹-개발기초)  
 5-1. [정적 컨텐츠](#5-1-정적-컨텐츠static-content)  
 5-2. [MVC와 템플릿 엔진](#5-2-mvc와-템플릿-엔진)  
+5-3. [API](#5-3-api)  
 
 ### 1. 프로젝트 생성  
  - [start.spring.io](https://start.spring.io/) 를 통해 Gradle 프로젝트 생성  
@@ -152,9 +153,12 @@
  - MVC와 템플릿 엔진  
    ```
    템플릿 엔진 - JSP, PHP 등... 
-   HTML을 서버에서 '프로그래밍해서 동적으로 바꾸어' 내려주는 것 
+   HTML을 서버에서 '프로그래밍을 통해 동적으로 바꾸어(렌더링하여)' 내려주는 것 
    
-   이러한 템플릿 엔진의 기능을 사용하기 위해 MVC 패턴(Controller, Model, View)을 사용
+   MVC 패턴(Controller, Model, View)을 적용하여 역할을 분리  
+   1. 비즈니스 로직 및 서버관련 일을 처리(Controller)  
+   2. 담아(Model)서 View에 전달함
+   3. View 처리시 템플릿 엔진을 통해 렌더링하여 클라이언트에게 렌더링한 HTML을 전달 
    ```
  - API
    ```
@@ -257,3 +261,65 @@
    템플릿 양식과 특정 데이터 모델에 따른 입력 자료를 합성하여 결과 문서를 출력하는 소프르웨어  
    > 쉽게 말해 html 파일을 브라우저로 그냥 보내주는 것이 아닌,  
      `서버에서 프로그래밍을 통해 동적으로 바꾸어서 보내주는 역할` 이라고 보면 된다.
+   
+### 5-3. API  
+ - API 방식  
+   `브라우저에 데이터만 보내주고` 화면을 만드는 건 브라우저가 담당하도록 함  
+   
+   > 3가지 방법 중 정적 컨텐츠 방식을 제외하면 2가지   
+     (`렌더링한 HTML을 내리는 방식` / `API로 데이터를 내리는 방식`)방식만 기억하면 됨  
+      
+   > `MVC?`  
+      뷰를 찾아 템플릿 엔진을 통해 화면을 렌더링해서 HTML을 웹 브라우저에 넘겨줌  
+   
+   > `API?`  
+      데이터를 브라우저에 넘겨주고 브라우저는 데이터를 받아 화면을 구성  
+ 
+ - API 방식 사용시 참고할 내용
+   - `@ResponseBody`  
+     > HTTP 통신 프로토콜 Response Body에  
+       @ResponseBody가 적용된 메서드의 리턴된 값을 직접 넣어준다는 의미  
+       리턴된 값(데이터)은 클라이언트에게 그대로 전달됨  
+   
+   - 객체를 리턴하는 경우?
+     ```java
+     @GetMapping("hello-api")
+     @ResponseBody
+     public Hello helloApi(@RequestParam("name") String name) {
+        Hello hello = new Hello();
+        hello.setName(name);
+        
+        return hello;
+     }
+     ```
+     > 위의 예시 처럼 객체를 return 할 경우 객체가 json으로 변환되어 브라우저에 전달됨  
+     
+     >`json?`  
+     {Key : value} 구조로 이루어진 문자열 데이터 포맷  
+     Ex) {"name" : "철수"}
+ 
+ - @ResponseBody 사용 원리  
+   ![image](https://user-images.githubusercontent.com/65080004/164896026-5817fb2f-c07d-4db7-acc5-dfa4a54f7cd4.png)  
+   ```
+   1. 웹 브라우저에서 localhost:8080/hello-api?name=spring을 요청
+   
+   2. 내장된 톰캣 서버가 해당 요청을 받음
+   
+   3. 톰캣 서버는 받은 요청을 스프링 컨테이너에게 넘김
+   
+   4. 스프링 컨테이너는 @Controller 쪽에서 해당 요청과 관련된 컨트롤러가 있는지 확인  
+      (요청과 Mapping 된 것이 있는지 확인  즉, 컨트롤러가 먼저 우선순위를 갖는다!)  
+   
+   5. 스프링 컨테이너는 해당 요청과 맵핑된 컨트롤러가 있으면 해당 메서드 호출
+   
+   6. 호출한 메서드에 @ResponseBody가 적용된 것 확인
+      6-1. return 값이 문자열일 경우   
+      6-2. return 값이 객체일 경우 
+   
+   7. 몇가지 조건을 확인하여 HttpMessageConverter가 동작
+      7-1. 넘어온 값이 단순 문자열일 경우 StringHttpMessageConverter 동작
+      7-2. 넘어온 값이 객체일 경우 MappingJackson2HttpMessageConverter 동작  
+           객체를 JSON 포맷으로 변환
+   
+   8. 웹 브라우저에 데이터 전달
+   ```

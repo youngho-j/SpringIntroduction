@@ -4,6 +4,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 public class HelloController {
@@ -19,4 +20,38 @@ public class HelloController {
         model.addAttribute("name", name);
         return "hello-template";
     }
+
+    /*
+        @ResponseBody?
+        HTTP에 응답 Body에 리턴된 값을 직접 넣어주겠다
+        
+        HTML이 아닌 return 값이 그대로 출력됨
+    */
+    @GetMapping("hello-string")
+    @ResponseBody
+    public String helloString(@RequestParam("name") String name) {
+        return "hello " + name;
+    }
+
+    @GetMapping("hello-api")
+    @ResponseBody
+    public Hello helloApi(@RequestParam("name") String name) {
+        Hello hello = new Hello();
+        hello.setName(name);
+        return hello;
+    }
+
+    static class Hello {
+        private String name;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+
+
 }
