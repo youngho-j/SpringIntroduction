@@ -13,6 +13,8 @@
 5-3. [API](#5-3-api)  
 6. [회원 관리 예제 - 백엔드 개발](#6-회원-관리-예제---백엔드-개발)   
 6-1. [비즈니스 요구사항 정리](#6-1.비즈니스-요구사항-정리)  
+6-2. [회원 도메인과 리포지토리 만들기](#6-2-회원-도메인과-리포지토리-만들기)  
+6-3. [회원 리포지토리 테스트 케이스 작성](#6-3-회원-리포지토리-테스트-케이스-작성)  
 
 ### 1. 프로젝트 생성  
  - [start.spring.io](https://start.spring.io/) 를 통해 Gradle 프로젝트 생성  
@@ -453,4 +455,83 @@
    > 4. public abstract java.util.Optional<T> `findAny()`  
         빈 Stream이 아닐경우 Optional 반환, 비어있을 경우 빈 Optional 반환  
     
-</details>
+</details>  
+
+### 6-3. 회원 리포지토리 테스트 케이스 작성  
+<details>
+    <summary>자세히</summary>  
+
+ - `Junit`이라는 프레임워크로 테스트를 실행  
+   > main 메서드, 컨트롤러 등을 통해 실행하면 `시간이 오래걸리고,  
+   반복실행이 어렵고, 여러 테스트를 한번에 실행하기 힘들기 때문에`   
+   
+ - 테스트 실행시 실행순서가 보장되지 않음.  
+   > 즉, `의존 관계없이(순서에 관계없이) 결과가 보장`되어야 한다.  
+   
+ - 회원 리포지토리 메모리 구현체 테스트  
+   ```java
+   // 경로 : test.java.hello.hellospring.repository
+   package hello.hellospring.repository;
+   
+   class MemoryMemberRepositoryTest {
+
+     MemoryMemberRepository repository = new MemoryMemberRepository();
+
+     @AfterEach
+     public void afterEach() {
+       repository.clearStore();
+     }
+
+     @Test
+     public void save()_메서드_테스트 {
+       Member member = new Member();
+       member.setName("spring");
+       repository.save(member);
+
+       Member result = repository.findById(member.getId()).get();
+
+       assertThat(result).isEqualTo(member);
+     }
+
+     @Test
+     public void findByName()_메서드_테스트 {
+       Member member1 = new Member();
+       member1.setName("spring1");
+       repository.save(member1);
+
+       Member member2 = new Member();
+       member2.setName("spring2");
+       repository.save(member2);
+
+       Member result = repository.findByName("spring1").get();
+
+       assertThat(result).isEqualTo(member1);
+     }
+
+     @Test
+     public void findAll()_메서드_테스트 {
+       Member member1 = new Member();
+       member1.setName("spring1");
+       repository.save(member1);
+
+       Member member2 = new Member();
+       member2.setName("spring2");
+       repository.save(member2);
+
+       List<Member> result = repository.findAll();
+
+       assertThat(result.size()).isEqualTo(2);
+     }
+   }
+   ```
+   > Tip
+   > - 테스트 클래스는 public 접근자가 아니어도 됨
+   > - 테스트 메서드 명은 한글로도 작성 가능
+   > - @AfterEach  
+   >   각각의 테스트가 종료될 때마다 실행될 메서드를 정의  
+   > 
+   > - @Test의 순서는 보장 되지 않음  
+   > - org.assertj.core.api.Assertions의 메서드를 사용하면  
+       가독성 측면에서 좋음(왼쪽에서 오른쪽으로 자연스럽게 읽으면 됨)  
+   
+</details> 
