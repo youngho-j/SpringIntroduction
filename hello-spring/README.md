@@ -350,3 +350,107 @@
    ![image](https://user-images.githubusercontent.com/65080004/164960325-31dabd48-5e63-47d8-9c44-3ccebbfeb56e.png)  
 </details>   
      
+### 6-2. 회원 도메인과 리포지토리 만들기
+<details>
+    <summary>자세히</summary>  
+ 
+ - 회원 도메인 생성
+   ```java  
+   package hello.hellospring.domain;
+   
+   public class Member {
+     
+     private Long id;
+     private String name;
+
+     public Long getId() {
+       return id;
+     }
+    
+     public void setId(Long id) {
+       this.id = id;
+     }
+    
+     public String getName() {
+       return name;
+     }
+
+     public void setName(String name) {
+       this.name = name;
+     }
+   }
+   ```
+ - 회원 리포지토리 인터페이스 생성  
+   ```java
+   package hello.hellospring.repository;
+   
+   public interface MemberRepository {
+     Member save(Member member);
+     
+     Optional<Member> findById(Long id);
+     
+     Optional<Member> findByName(String name);
+     
+     List<Member> findAll();
+   } 
+   ```
+   > `Optional?`  
+     Optional<T>는 `null이 올 수 있는 값을 감싸는 Wrapper 클래스`  
+     NPE가 발생하지 않도록 도움, 각종 메서드 제공
+     
+ - 회원 리포지토리 인터페이스 구현체 생성
+   ```java
+   package hello.hellospring.repository;
+   
+   public class MemoryMemberRepository implements MemberRepository {
+
+     private static Map<Long, Member> store = new HashMap<>();
+     private static long sequence = 0L;
+
+     @Override
+     public Member save(Member member) {
+       member.setId(++sequence);
+       store.put(member.getId(), member);
+       return member;
+     }
+
+     @Override
+     public Optional<Member> findById(Long id) {
+       return Optional.ofNullable(store.get(id));
+     }
+
+     @Override
+     public Optional<Member> findByName(String name) {
+       return store.values().stream()
+               .filter(member -> member.getName().equals(name))
+               .findAny();
+     }
+
+     @Override
+     public List<Member> findAll() {
+       return new ArrayList<>(store.values());
+     }
+   }
+   ```
+   > Optional.`ofNullable`  
+   > public static <T> Optional<T> ofNullable(T value);  
+   > 
+   > value가 `null인 경우 빈 Optional 반환`
+   
+   > store.values().stream()   
+   > .filter(member -> member.getName().equals(name))  
+   > .findAny();  
+   > 
+   > 1. public abstract java.util.Collection<V> `values()`  
+        HashMap에 저장된 value 목록을 Collection 형태로 리턴  
+   >
+   > 2. public java.util.stream.Stream<E> `stream()`  
+        Collection 형태로 리턴된 값을 stream() 메서드를 통해 순차 Stream 리턴  
+   > 
+   > 3. public abstract Stream<T> `filter(java.util.function.Predicate<? super T> predicate)`  
+        주어진 조건에 일치하는 요소로 구성된 Stream 리턴  
+   > 
+   > 4. public abstract java.util.Optional<T> `findAny()`  
+        빈 Stream이 아닐경우 Optional 반환, 비어있을 경우 빈 Optional 반환  
+    
+</details>
