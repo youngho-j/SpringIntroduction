@@ -16,6 +16,7 @@
 6-2. [회원 도메인과 리포지토리 만들기](#6-2-회원-도메인과-리포지토리-만들기)  
 6-3. [회원 리포지토리 테스트 케이스 작성](#6-3-회원-리포지토리-테스트-케이스-작성)  
 6-4. [회원 서비스 개발](#6-4-회원-서비스-개발)  
+6-5. [회원 서비스 테스트](#6-5-회원-서비스-테스트)  
 
 ### 1. 프로젝트 생성  
  - [start.spring.io](https://start.spring.io/) 를 통해 Gradle 프로젝트 생성  
@@ -580,9 +581,136 @@
    > Tip  
    > - 메서드 작성시 길어지는 코드는 따로 메서드로 추출하는 것이  
    >   깔끔한 코드를 유지하는데 도움이 된다.  
-   >   > 추출하고자 하는 코드 드래그 후 [단축키 : ctrl + alt + M]
+   >   > 추출하고자 하는 코드 드래그 후 [단축키 : ctrl + alt + M]  
+   > - 리팩토링 관련 단축키  
+   >   > 이름 변경 [단축키 : shift + F6]  
+         
+   >   > 접근제어자, 반환타입, 이름 등 주요 정보 변경 [단축키 : ctrl + F6]  
    > - service에 대한 개발은 많은 사람들의 의사소통이 들어가는 부분이기 때문에  
    >   메서드 명에 비즈니스적인 용어를 작성하는 것이 의사소통시 이해하기 용이함  
    >   그에 반해 repository는 개발적인 부분이므로 조금 더 자유롭게 작성 가능
 
+</details>  
+
+### 6-5. 회원 서비스 테스트
+<details>
+    <summary>자세히</summary>  
+  
+ - 테스트 코드 작성
+   ```java
+   package hello.hellospring.service;
+   
+   class MemberServiceTest {
+
+     MemberService memberService;
+     MemoryMemberRepository memberRepository;
+     
+     // 테스트시 동일한 MemoryMemberRepository 객체를 사용하기 위해 
+     // memberService 생성시 MemoryMemberRepository를 매개변수로 받아 생성
+     // 즉, memberService가 MemoryMemberRepository를 직접 생성하지 않고 외부에서 주입받음
+     // 이를 '의존성 주입(Dependency Injection)'이라고 함
+     // 각 메서드 실행전에 의존성 주입을 진행하여 동일한 MemoryMemberRepository 객체를 공유하도록 함
+     @BeforeEach
+     public void beforeEach() {
+       memberRepository = new MemoryMemberRepository();
+       memberService = new MemberService(memberRepository);
+     }
+     
+     // 테스트의 독립성을 보장하기 위해 적용
+     @AfterEach
+     public void afterEach() {
+       memberRepository.clearStore();
+     }
+
+    @Test
+    void 회원가입_테스트() {
+
+      //given
+      Member member = new Member();
+      member.setName("hello");
+
+      //when
+      Long saveId = memberService.join(member);
+
+      //then
+      Member findMember = memberService.findOne(saveId).get();
+      assertThat(findMember.getName()).isEqualTo(member.getName());
+    }
+
+    @Test
+    public void 회원가입_중복_회원_예외_테스트() {
+      //given
+      Member member1 = new Member();
+      member1.setName("spring");
+
+      Member member2 = new Member();
+      member2.setName("spring");
+
+      //when
+      memberService.join(member1);
+
+      //then
+      
+      //assertThrows
+      // 첫번째 인자 : 코드의 실행 결과로 발생되는 예외
+      // 두번째 인자 : 실행할 코드(람다식)
+      IllegalStateException e = 
+        assertThrows(IllegalStateException.class, () -> memberService.join(member2));
+      assertThat(e.getMessage()).isEqualTo("이미 존재하는 회원입니다.");
+   }
+   ...
+   
+   // 의존성 주입을 위한 MemberService 코드 수정
+   package hello.hellospring.service;
+   
+   public class MemberService {
+
+     private final MemberRepository memberRepository;
+
+     public MemberService(MemberRepository memberRepository) {
+       this.memberRepository = memberRepository;
+     }
+     ...
+   } 
+   ```
+ > Tip
+ > - 테스트 클래스(틀) 생성 단축키
+ >   > `클래스 명 선택` 또는 `클래스 내부에 커서 둔 채` [단축키 : ctrl + shift + T]  
+ > - 테스트 코드 작성시 `given, when, then` 구조로 작성하면 도움됨   
+ >   (구조에 맞게 딱 떨어지는 상황이 아닐수도 있으므로 상황에 따라 응용 또는 변형할 수도 있음)  
+ >
+ >   `given` : `무언가 주어짐(상황, 데이터 등)`  
+ >    - 주어진 데이터 기반으로 검증을 진행하는구나를 알 수 있음
+ >  
+ >   `when` : `테스트 실행시`  
+ >    - 이걸 검증하는구나를 알 수 있음  
+ > 
+ >   `then` : `이러한 결과가 나와야함`  
+ >    - 이러한 결과가 나와야하는구나를 알 수 있음  
+ >
+ > 
+ > - 테스트 작성시 정상 flow작성도 중요하지만  
+ >   `예외 flow를 테스트 하는 것이 훨씬 더 중요함`
+ >   
+ >  
+ > - 람다함수 : 익명함수(이름이 없는 함수)를 지칭  
+ >   > Ex) () -> memberService.join(member2);  
+ >   - 매개변수목록(파라미터)과 몸체로 구분됨
+ >     > (매개변수목록) -> {몸체} 
+ >   - `->` (매개변수 화살표): 매개변수목록과 몸체를 구분
+ >   - 실행문 : 변수 선언, 값 저장, 메서드 호출에 해당하는 코드,  
+       작성 후 `반드시 세미콜론(;) 붙여야함`  
+ > 
+ >   - 매개변수의 타입을 추론할 수 있는 경우 타입 생략 가능   
+ >   - 몸체가 단일 실행문이면 중괄호`{}` 생략 가능  
+ >   
+ > 
+ > - Extract Variable 리팩토링  
+ >   해당 표현식의 결과를 처리하는데 도움(변수로 추출)  
+ >   > 추출할 표현식 선택 후 [단축키 : ctrl + alt + V]  
+     
+ - Reference  
+   [히진쓰 람다식의 개념 및 사용법](https://khj93.tistory.com/entry/JAVA-%EB%9E%8C%EB%8B%A4%EC%8B%9DRambda%EB%9E%80-%EB%AC%B4%EC%97%87%EC%9D%B4%EA%B3%A0-%EC%82%AC%EC%9A%A9%EB%B2%95)  
+   [밤둘레 람다란?](https://bamdule.tistory.com/75)  
 </details> 
+ 
