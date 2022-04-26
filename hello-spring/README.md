@@ -15,6 +15,7 @@
 6-1. [비즈니스 요구사항 정리](#6-1.비즈니스-요구사항-정리)  
 6-2. [회원 도메인과 리포지토리 만들기](#6-2-회원-도메인과-리포지토리-만들기)  
 6-3. [회원 리포지토리 테스트 케이스 작성](#6-3-회원-리포지토리-테스트-케이스-작성)  
+6-4. [회원 서비스 개발](#6-4-회원-서비스-개발)  
 
 ### 1. 프로젝트 생성  
  - [start.spring.io](https://start.spring.io/) 를 통해 Gradle 프로젝트 생성  
@@ -533,5 +534,55 @@
    > - @Test의 순서는 보장 되지 않음  
    > - org.assertj.core.api.Assertions의 메서드를 사용하면  
        가독성 측면에서 좋음(왼쪽에서 오른쪽으로 자연스럽게 읽으면 됨)  
-   
+</details> 
+
+### 6-4. 회원 서비스 개발
+<details>
+    <summary>자세히</summary>  
+ 
+ - 회원 서비스 개발  
+   ```java
+    package hello.hellospring.service;
+    
+    public class MemberService {
+
+      private final MemberRepository memberRepository 
+                                     = new MemoryMemberRepository();
+
+      /*
+      * 회원가입
+      * */
+      public Long join(Member member) {
+        validateDuplicateMember(member); //중복 회원 검증
+        memberRepository.save(member);
+        return member.getId();
+      }
+
+      private void validateDuplicateMember(Member member) {
+        memberRepository.findByName(member.getName())
+                        .ifPresent(m -> {
+                           throw new IllegalStateException("이미 존재하는 회원입니다.");
+                         });
+      }
+
+      /*
+      * 전체 회원 조회
+      * */
+      public List<Member> findMembers() {
+        return memberRepository.findAll();
+      }
+
+      public Optional<Member> findOne(Long memberId) {
+        return memberRepository.findById(memberId);
+      }
+    }
+   ```
+   > Tip  
+   > - 메서드 작성시 길어지는 코드는 따로 메서드로 추출하는 것이  
+   >   깔끔한 코드를 유지하는데 도움이 된다.  
+   >   > 추출하고자 하는 코드 드래그 후 [단축키 : ctrl + alt + M]
+   > - service에 대한 개발은 많은 사람들의 의사소통이 들어가는 부분이기 때문에  
+   >   메서드 명에 비즈니스적인 용어를 작성하는 것이 의사소통시 이해하기 용이함  
+   >   그에 반해 repository는 개발적인 부분이므로 조금 더 자유롭게 작성 가능
+
 </details> 
