@@ -17,6 +17,8 @@
 6-3. [회원 리포지토리 테스트 케이스 작성](#6-3-회원-리포지토리-테스트-케이스-작성)  
 6-4. [회원 서비스 개발](#6-4-회원-서비스-개발)  
 6-5. [회원 서비스 테스트](#6-5-회원-서비스-테스트)  
+7. [스프링 빈과 의존관계](#7-스프링-빈과-의존관계)  
+7-1. [컴포넌트 스캔과 자동 의존관계 설정](#7-1-컴포넌트-스캔과0자동0의존관계-설정)  
 
 ### 1. 프로젝트 생성  
  - [start.spring.io](https://start.spring.io/) 를 통해 Gradle 프로젝트 생성  
@@ -661,7 +663,7 @@
    ...
    
    // 의존성 주입을 위한 MemberService 코드 수정
-   package hello.hellospring.service;
+   package hello.hellospring.service
    
    public class MemberService {
 
@@ -714,3 +716,118 @@
    [밤둘레 람다란?](https://bamdule.tistory.com/75)  
 </details> 
  
+### 7. 스프링 빈과 의존관계  
+<details>
+    <summary>자세히</summary>  
+
+ - 스프링 빈(Bean)
+   > `스프링 컨테이너가 생성, 관리하는 자바 객체`  
+   > 컨테이너의 관리를 통해 객체를 여러번 생성할 필요 X, 공용으로 사용할 수 있음
+ 
+ - 스프링 빈 등록하는 방법  
+   1. 컴포넌트 스캔 원리를 통해 자동 등록  
+   2. 자바 코드를 통해 직접 등록 
+   
+
+ - 참고
+   - 스프링 빈 등록시, 기본적으로 싱글톤으로 등록한다. (싱글톤이 아니게 설정가능)  
+     (유일하게 하나를 등록 후 공유 즉, 같은 스프링 빈은 같은 인스턴스)  
+   - 스프링을 쓰면, 웬만한건 다 스프링 빈으로 등록해서 써야함(얻는 이점이 많음)  
+</details>   
+
+### 7-1. 컴포넌트 스캔과 자동 의존관계 설정  
+<details>
+    <summary>자세히</summary>  
+
+ - 컴포넌트 스캔(Component Scan)?
+   ```
+   @Component를 가진 모든 대상을 가져와서 빈에 등록하기 위해 찾는 과정  
+   ```
+ - 컴포넌트 스캔 원리  
+   ```java
+   @Controller
+   public class MemberController {
+     
+   }
+   ```
+   위의 코드처럼 클래스를 작성 후 @Controller 어노테이션을 붙일 경우  
+     1. 스프링 실행시 스프링 컨테이너가 생성  
+     2. 생성된 `컨테이너에 해당 자바 객체(MemberController)를 생성`
+     3. 객체를 `컨테이너에 빈으로 등록하고 관리`  
+    순서로 동작이 진행됨  
+        
+
+ - 참고  
+   - @Controller, @Service, @Repository 는 `@Component의 구체화된 형태`  
+     
+   - 컴포넌트 스캔 대상  
+     > `@Component` - 개발자가 직접 작성한 Class를 Bean으로 등록하기 위해 사용  
+       `@Controller` - 스프링 MVC 컨트롤러에서 사용  
+       `@Service` - 스프링 비즈니스 로직에서 사용  
+       `@Repository` - 스프링 데이터 접근 계층에서 사용  
+       `@Configuration` - 스프링 설정 정보에서 사용  
+     
+   - 컴포넌트 스캔 범위  
+     > ../hello/hellospring 하위 패키지 경로가 스캔 범위  
+     >  
+     > 어떻게 알 수 있나?  
+       HelloSpringApplication 클래스의 @SpringBootApplication을 보면  
+       scanBasePackages()메서드의 스캔 시작 패키지가 기본 패키지로 설정되어있기 때문에  
+       ```java
+       package hello.hellospring;
+
+       import org.springframework.boot.SpringApplication;
+       import org.springframework.boot.autoconfigure.SpringBootApplication;
+        
+       @SpringBootApplication
+       public class HelloSpringApplication {
+        
+         public static void main(String[] args) {
+           SpringApplication.run(HelloSpringApplication.class, args);
+         }
+       }
+       ```
+     
+ - 자동 의존관계 설정
+   ```
+   스프링이 스프링 컨테이너에 등록된 빈(Bean) 중에서  
+   @Autowired가 적용된 객체와 같은 빈을 찾아 주입  
+   ```
+   > `의존성 주입`(Dependency Injection) : 객체간의 `의존성을 외부에서 넣어주는 것`
+ - 자동 의존관계 설정 원리
+   ```java
+   @Controller
+   public class MemberController {
+    
+     private final MemberService memberService;
+    
+     @Autowired
+     public MemberController(MemberService memberService) {
+       this.memberService = memberService;
+     }
+   }
+   ```
+   위의 코드처럼 클래스를 작성 후 생성자에 @Autowired 어노테이션을 붙일 경우
+     1. 스프링 실행시 스프링 컨테이너가 생성
+     2. 생성된 `컨테이너에 해당 자바 객체(MemberController)를 생성`
+     3. 스프링이 @Autowired 어노테이션을 확인 
+     4. 스프링 컨테이너에서 연관된 빈(MemberService)을 찾아서 주입함   
+        순서로 동작이 진행됨
+        
+
+ - 참고  
+     1. `@Autowired`  
+        자동으로 `연관 관계를 설정`해주는 역할(간단하게, `연결한다`라고 생각하기)  
+        (스프링 컨테이너에 존재하는 Bean을 주입)  
+     2. Bean 주입 순서는 `Type 확인 -> name 확인` 방식으로 주입이 이루어짐   
+     3. @Autowired 적용된 객체가 빈으로 등록되어 있지 않거나 2개 이상 존재시 예외 발생  
+     4. 생성자에 @Autowired 적용시 의존관계 주입이 필요한 파라미터가 1개일 경우  
+        @Autowired 생략 가능
+         
+
+ - Reference  
+   [yeonnex 스프링빈등록과의존관계설정](https://velog.io/@yeonnex/%EC%8A%A4%ED%94%84%EB%A7%81-%EB%B9%88-%EB%93%B1%EB%A1%9D%EA%B3%BC-%EC%9D%98%EC%A1%B4%EA%B4%80%EA%B3%84-%EC%84%A4%EC%A0%95-%EC%BB%B4%ED%8F%AC%EB%84%8C%ED%8A%B8-%EC%8A%A4%EC%BA%94%EA%B3%BC-%EC%9E%90%EB%8F%99-%EC%9D%98%EC%A1%B4%EA%B4%80%EA%B3%84-%EC%84%A4%EC%A0%95)  
+   [dodeon 스프링 빈과 의존관계](https://dodeon.gitbook.io/study/kimyounghan-spring-introduction/04-spring-bean-dependencies)  
+   [Jan92 @Component, @Bean, @Autowired 어노테이션 알아보기](https://wildeveloperetrain.tistory.com/26)  
+
+</details>   
