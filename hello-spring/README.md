@@ -18,7 +18,8 @@
 6-4. [회원 서비스 개발](#6-4-회원-서비스-개발)  
 6-5. [회원 서비스 테스트](#6-5-회원-서비스-테스트)  
 7. [스프링 빈과 의존관계](#7-스프링-빈과-의존관계)  
-7-1. [컴포넌트 스캔과 자동 의존관계 설정](#7-1-컴포넌트-스캔과0자동0의존관계-설정)  
+7-1. [컴포넌트 스캔과 자동 의존관계 설정](#7-1-컴포넌트-스캔과-자동-의존관계-설정)  
+7-2. [자바 코드로 직접 스프링 빈 등록하기](#7-2-자바-코드로-직접-스프링-빈-등록하기)  
 
 ### 1. 프로젝트 생성  
  - [start.spring.io](https://start.spring.io/) 를 통해 Gradle 프로젝트 생성  
@@ -722,11 +723,13 @@
 
  - 스프링 빈(Bean)
    > `스프링 컨테이너가 생성, 관리하는 자바 객체`  
-   > 컨테이너의 관리를 통해 객체를 여러번 생성할 필요 X, 공용으로 사용할 수 있음
+   > 컨테이너의 관리를 통해 객체를 여러번 생성할 필요 X, 공용으로 사용할 수 있음  
+   > `POJO(Plain Old Java Object)`로써 Spring 애플리케이션을 구성하는 핵심 객체
+
  
  - 스프링 빈 등록하는 방법  
    1. 컴포넌트 스캔 원리를 통해 자동 등록  
-   2. 자바 코드를 통해 직접 등록 
+   2. 자바 코드로 직접 등록 
    
 
  - 참고
@@ -793,7 +796,9 @@
    스프링이 스프링 컨테이너에 등록된 빈(Bean) 중에서  
    @Autowired가 적용된 객체와 같은 빈을 찾아 주입  
    ```
-   > `의존성 주입`(Dependency Injection) : 객체간의 `의존성을 외부에서 넣어주는 것`
+   > `의존성 주입`(Dependency Injection) : 객체간의 `의존성을 외부에서 넣어주는 것` 
+   >  - 3가지(`필드 주입`, `setter 주입`, `생성자 주입`) 방법이 존재  
+   >    그 중 `생성자 주입을 권장`  
  - 자동 의존관계 설정 원리
    ```java
    @Controller
@@ -822,7 +827,8 @@
      2. Bean 주입 순서는 `Type 확인 -> name 확인` 방식으로 주입이 이루어짐   
      3. @Autowired 적용된 객체가 빈으로 등록되어 있지 않거나 2개 이상 존재시 예외 발생  
      4. 생성자에 @Autowired 적용시 의존관계 주입이 필요한 파라미터가 1개일 경우  
-        @Autowired 생략 가능
+        @Autowired 생략 가능  
+     5. @Autowired를 통한 DI는 스프링이 관리하는 객체에서만 동작   
          
 
  - Reference  
@@ -831,3 +837,63 @@
    [Jan92 @Component, @Bean, @Autowired 어노테이션 알아보기](https://wildeveloperetrain.tistory.com/26)  
 
 </details>   
+
+### 7-2. 자바 코드로 직접 스프링 빈 등록하기
+<details>
+    <summary>자세히</summary>  
+
+ - 직접 등록 방법  
+   1. 기존 MemberService 코드에서 @Service, @Autowired 제거
+   2. 기존 MemoryMemberRepository 코드에서 @Repository 제거
+   3. SpringConfig.java 파일 생성 (경로 : hello/hellospring)
+      ```java
+      package hello.hellospring; 
+     
+      @Configuration
+      public class SpringConfig {
+        
+        @Bean
+        public MemberService memberService() {
+          return new MemberService(memberRepository());
+        }
+        
+        @Bean
+        public MemberRepository memberRepository() {
+          return new MemoryMemberRepository();
+        }
+      }
+      ```
+   4. `@Configuration` 을 적용하여 해당 클래스에서 Bean을 등록한다고 명시함  
+   5. 해당 클래스에 Bean으로 등록하고자하는 메서드에 @Bean 적용  
+      주의! `메서드 이름으로 Bean 이름이 결정`되므로, 중복에 주의할 것!  
+   
+   - 참고  
+     `@Configuration 안에서 @Bean을 사용해야 싱글톤을 보장받을 수 있음`
+
+ 
+ - 빈 등록 과정   
+   1. 스프링 실행시 스프링 컨테이너 생성  
+   2. 스프링 컨테이너는 @Configuration이 적용된 클래스를 자동으로 빈으로 등록
+   3. 해당 클래스를 파싱하여 @Bean이 적용된 메서드를 Bean으로 등록  
+    
+ 
+ - 설정을 통해 수동으로 직접 빈을 등록해야하는 경우  
+   > 1. 개발자가 직접 제어가 불가능한 라이브러리를 활용할 때  
+   > 2. 애플리케이션에서 전 범위적으로 사용되는 클래스를 등록할 때  
+   > 3. 다형성을 활용하여 여러 구현체를 등록해주어야 할 때
+ 
+ 
+ - 설정을 통해 수동으로 직접 빈을 등록하는 것의 장점  
+   - `한 눈에 파악하여 유지보수하기 좋기 떄문에`  
+    
+
+ - 참고  
+   > 실무에서는 주로  
+   > `정형화된 Controller, Service, Repository 같은 코드는 컴포넌트 스캔을 사용`하고,   
+   > `정형화 되지 않거나, 상황에 따라 구현 클래스를 변경해야 하는 경우  
+   > 설정을 통해 스프링 빈`으로 등록 함  
+   
+ - Reference  
+   [망나니개발자 @Bean, @Configuration, @Component 차이 및 비교](https://mangkyu.tistory.com/75)  
+   
+</details>
