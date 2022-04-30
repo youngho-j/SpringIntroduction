@@ -20,6 +20,10 @@
 7. [스프링 빈과 의존관계](#7-스프링-빈과-의존관계)  
 7-1. [컴포넌트 스캔과 자동 의존관계 설정](#7-1-컴포넌트-스캔과-자동-의존관계-설정)  
 7-2. [자바 코드로 직접 스프링 빈 등록하기](#7-2-자바-코드로-직접-스프링-빈-등록하기)  
+8. [회원 관리 예제](#8-회원-관리-예제)  
+8-1. [홈 화면 추가](#8-1-홈-화면-추가)  
+8-2. [등록 기능 추가](#8-2-등록-기능-추가)  
+8-3. [조회 기능 추가](#8-3-조회-기능-추가)  
 
 ### 1. 프로젝트 생성  
  - [start.spring.io](https://start.spring.io/) 를 통해 Gradle 프로젝트 생성  
@@ -896,4 +900,63 @@
  - Reference  
    [망나니개발자 @Bean, @Configuration, @Component 차이 및 비교](https://mangkyu.tistory.com/75)  
    
+</details>
+
+### 8. 회원 관리 예제
+<details>
+    <summary>자세히</summary>  
+
+ - 홈 화면 추가
+ - 등록 기능 추가
+ - 조회 기능 추가
+    
+</details>
+
+### 8-1. 홈 화면 추가
+<details>
+    <summary>자세히</summary>  
+
+ - 홈 컨트롤러 추가
+   ```java
+   package hello.hellospring.controller;
+    
+   @Controller
+   public class HomeController {
+    
+     @GetMapping("/")
+     public String home() {
+       return "home";
+     }
+   } 
+   ```  
+ 
+ - 홈 화면 추가
+   ```html
+   <!DOCTYPE html>
+   <html lang="en" xmlns:th="http://www.thymeleaf.org">
+   <body>
+       <div class="container">
+           <div>
+               <h1>Hello Spring</h1>
+               <p>회원 기능</p>
+               <p>
+                   <a href="/member/new">화원 가입</a>
+                   <a href="/members">회원 목록</a>
+               </p>
+           </div>
+       </div>
+   </body>
+   </html>
+   ```  
+   
+   > - 참고  
+   >   왜 index.html이 호출되지 않고 home.html이 호출되는지?  
+   >   1. 웹 브라우저에서 요청이 오면 톰캣 서버는 스프링 컨테이너에 요청을 위임  
+   >   2. 스프링 컨테이너는 요청과 관련된 컨트롤러가 등록이 되어 있는지 확인  
+   >   3-1. 있을 경우 해당 요청을 viewResolver에 넘겨줌  
+   >   3-2. 없을 경우 static 파일을 찾음  
+   > 
+   >   따라서, `매핑된 컨트롤러가 존재하기 때문에` index.html는 호출되지 않는다.  
+   >   welcomePage도 같은 이유로 호출되지 않는다.  
+    
 </details>
