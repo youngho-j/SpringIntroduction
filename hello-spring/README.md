@@ -975,7 +975,7 @@
 <details>
     <summary>자세히</summary>  
 
- - 회원 등록 폼 개발
+ - 회원 등록 폼 생성
    ```java
    package hello.hellospring.controller;
    
@@ -1106,5 +1106,59 @@
 <details>
     <summary>자세히</summary>  
 
+ - 회원 정보 조회 기능 추가
+   ```java
+   package hello.hellospring.controller;
+
+   @Controller
+   public class MemberController {
+
+     private final MemberService memberService;
+    
+     ...
+  
+     @GetMapping("members")
+     public String list(Model model) {
+
+       List<Member> members = memberService.findMembers();
+
+       model.addAttribute("members", members);
+
+       return "members/memberList";
+     }
+   }
+   ```  
+ 
+ - 회원 목록 출력 페이지 추가  
+   ```html
+   <!DOCTYPE html>
+   <html lang="en" xmlns:th="http://www.thymeleaf.org">
+   <body>
+   <div class="container">
+       <div>
+           <table>
+               <thead>
+               <tr>
+                   <th>#</th>
+                   <th>이름</th>
+               </tr>
+               </thead>
+               <tbody>
+               <tr th:each="member : ${members}">
+                   <td th:text="${member.id}"></td>
+                   <td th:text="${member.name}"></td>
+               </tr>
+               </tbody>
+           </table>
+       </div>
+   </div>
+   </body>
+   </html>
+   ```  
+   > Thymeleaf 문법  
+   > - th:each : 리스트와 같은 collection 자료형을 서버에서 넘겨주면  
+   >   그에 맞춰 반복적인 작업이 이루어질 때 사용  
+   > 
+   > - th:text : 태그 안의 텍스트를 서버에서 전달 받은 값에 따라 표현하고자 할 때 사용
 
 </details>
