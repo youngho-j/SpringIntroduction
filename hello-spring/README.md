@@ -940,7 +940,7 @@
                <h1>Hello Spring</h1>
                <p>회원 기능</p>
                <p>
-                   <a href="/member/new">화원 가입</a>
+                   <a href="/members/new">화원 가입</a>
                    <a href="/members">회원 목록</a>
                </p>
            </div>
@@ -949,6 +949,16 @@
    </html>
    ```  
    
+  - 홈 화면 출력 동작 순서
+    1. 웹 브라우저 요청
+    2. 요청을 받은 톰캣 서버가 스프링 컨테이너에 요청 위임
+    3. 스프링 컨테이너는 요청과 관련된 컨트롤러가 있는지 확인
+    4. 컨트롤러에서 요청과 일치하는 메서드를 실행
+    5. 메서드 실행 결과값을 viewResolver에 전달
+    6. viewResolver는 return 값과 같은 이름의 html을 찾아 템플릿 엔진에 넘겨줌
+    7. 템플릿 엔진은 받은 html 파일을 렌더링을 통해 변환 후 웹 브라우저에 넘김
+    8. 사용자는 웹 브라우저에서 렌더링 된 html을 확인
+
    > - 참고  
    >   왜 index.html이 호출되지 않고 home.html이 호출되는지?  
    >   1. 웹 브라우저에서 요청이 오면 톰캣 서버는 스프링 컨테이너에 요청을 위임  
@@ -959,4 +969,142 @@
    >   따라서, `매핑된 컨트롤러가 존재하기 때문에` index.html는 호출되지 않는다.  
    >   welcomePage도 같은 이유로 호출되지 않는다.  
     
+</details>  
+
+### 8-2. 등록 기능 추가
+<details>
+    <summary>자세히</summary>  
+
+ - 회원 등록 폼 개발
+   ```java
+   package hello.hellospring.controller;
+   
+   @Controller
+   public class MemberController {
+    
+     private final MemberService memberService;
+    
+     @Autowired
+     public MemberController(MemberService memberService) {
+       this.memberService = memberService;
+     }
+    
+     @GetMapping("/members/new")
+     public String createForm() {
+       return "members/createMemberForm";
+     }
+   }
+   ```  
+ 
+ - 회원 등록 폼 HTML  
+   경로 : `resources/templates/members/createMemberForm.html`  
+   ```html
+   <!DOCTYPE html>
+   <html lang="en" xmlns:th="http://www.thymeleaf.org">
+   <body>
+   <div class="container">
+         
+       <form action="/members/new" method="post">
+           <div class="form-group">
+               <label for="name">이름</label>
+               <input type="text" id="name" name="name" placeholder="이름을 입력하세요.">
+           </div>
+           <button type="submit">등록</button>
+       </form>
+    
+   </div>
+   </body>
+   </html>
+   ```  
+   
+ - 회원 등록 화면 출력 동작 순서
+    1. 웹 브라우저 요청
+    2. 요청을 받은 톰캣 서버가 스프링 컨테이너에 요청 위임
+    3. 스프링 컨테이너는 요청과 관련된 컨트롤러가 있는지 확인
+    4. 컨트롤러에서 요청과 일치하는 메서드를 실행
+    5. 메서드 실행 결과값을 viewResolver에 전달
+    6. viewResolver는 return 값과 같은 이름의 html을 찾아 템플릿 엔진에 넘겨줌
+    7. 템플릿 엔진은 받은 html 파일을 렌더링을 통해 변환 후 웹 브라우저에 넘김
+    8. 사용자는 웹 브라우저에서 렌더링 된 html을 확인  
+    
+ > GetMapping  
+ > - url 창에 입력 후 엔터
+ > - 조회할때 주로 씀  
+ 
+ - 데이터를 전달 받을 폼 객체
+   ```java
+   package hello.hellospring.controller;
+
+   public class MemberForm {
+   private String name;
+    
+       public String getName() {
+         return name;
+       }
+    
+       public void setName(String name) {
+         this.name = name;
+       }
+   }
+   ```
+
+- 회원 등록 기능
+  ```java
+  package hello.hellospring.controller;
+  
+  @Controller
+  public class MemberController {
+   
+    private final MemberService memberService;
+    
+    ...
+  
+    @PostMapping("members/new")
+    public String create(MemberForm form) {
+      Member member = new Member();
+      member.setName(form.getName());
+
+      memberService.join(member);
+
+      return "redirect:/";
+    }
+  }
+  ```  
+
+ - 회원 등록 동작 순서
+    1. 회원 등록 화면에서 form 태그 내 input 에 값을 입력 후 submit 클릭 
+       > form tag  
+       > - action="/members/new" : 요청
+       > - method="post" : 요청을 보내는 방식  
+       > 
+       > input tag 
+       > - type="text" : 텍스르를 입력할 수 있도록 타입을 설정  
+       > - id="name" : input tag의 id 값  
+       > - name="name" : 서버로 넘어오는 데이터의 키  
+       > - placeholder="이름을 입력하세요" : 텍스트가 입력되지 않았을때 보여주는 내용  
+       > 
+       > button tag
+       > - type="submit" : form 태그에 설정된 요청을 보내도록 함  
+     
+    2. 요청을 post 방식으로 보냄
+    3. 요청을 받은 톰캣 서버가 스프링 컨테이너에 요청 위임   
+    4. 스프링 컨테이너는 요청과 관련된 컨트롤러가 있는지 확인
+    5. 컨트롤러에서 요청과 일치하는 메서드(create)를 실행  
+    5-1. input tag name 속성으로 넘어온 값을 스프링이  
+         MemberForm의 setName 메서드를 호출하여 값을 넣어줌  
+    5-2. MemberForm 객체에 저장된 값을 꺼내 Member 객체에 저장  
+    5-3. join 메서드 실행   
+    5. 메서드(create) 실행 결과값을 viewResolver에 전달
+    6. redirect 방식으로 [8-1](#8-1-홈-화면-추가)에서 작성했던 홈 화면 출력 과정이 동일하게 진행됨
+
+ > PostMapping
+ > - 데이터를 폼같은데 넣어서 전달할 때 주로 사용  
+ 
+</details>  
+
+### 8-3. 조회 기능 추가
+<details>
+    <summary>자세히</summary>  
+
+
 </details>
