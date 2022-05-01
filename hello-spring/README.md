@@ -26,6 +26,9 @@
 8-3. [조회 기능 추가](#8-3-조회-기능-추가)  
 
 ### 1. 프로젝트 생성  
+<details>
+    <summary>자세히</summary> 
+
  - [start.spring.io](https://start.spring.io/) 를 통해 Gradle 프로젝트 생성  
    ![image](https://user-images.githubusercontent.com/65080004/164405171-8132c22f-8277-4b21-bc43-fc97b05ef72a.png)  
    - Project : 프로젝트에서 사용할 빌드 관리도구 선택  
@@ -54,7 +57,11 @@
  - Reference  
    [오늘도 MadPlay! Gradle이란 무엇일까?](https://madplay.github.io/post/what-is-gradle)  
    
+</details>  
+
 ### 2. 라이브러리 설정  
+<details>
+    <summary>자세히</summary> 
  - Gradle은 의존관계가 있는 라이브러리를 함께 다운로드 함  
      
 
@@ -76,8 +83,12 @@
       * mockito : 목 라이브러리
       * assertj : 테스트 코드를 좀더 편하게 작성할 수 있도록 도와주는 라이브러리
       * spring test : 스프링 통합 테스트 지원  
+</details>    
 
 ### 3. View Page 설정  
+<details>
+    <summary>자세히</summary>  
+
  - spring-boot WelcomePage 기능  
    * src/main/resources/static/index.html을 넣어두면 WelcomePage 기능 제공  
    * WelcomePage?  
@@ -92,8 +103,13 @@
 
  - Reference  
    [My Programming Trend Report Thymeleaf 간단 매뉴얼](http://progtrend.blogspot.com/2019/05/thymeleaf.html)  
+  
+</details>  
 
-### 4. 빌드 및 실행
+### 4. 빌드 및 실행  
+<details>
+    <summary>자세히</summary> 
+
  - 포트가 겹칠 수 있으므로 실행된 서버 종료후 진행  
      
 
@@ -155,8 +171,12 @@
 
  - Reference  
    [oliviarla 윈도우에서 빌드하고 실행하기](https://velog.io/@oliviarla/spring-boot%EC%9C%88%EB%8F%84%EC%9A%B0%EC%97%90%EC%84%9C-%EB%B9%8C%EB%93%9C%ED%95%98%EA%B3%A0-%EC%8B%A4%ED%96%89%ED%95%98%EA%B8%B0)  
+</details>  
 
-### 5. 스프링 웹 개발 기초
+### 5. 스프링 웹 개발 기초  
+<details>
+    <summary>자세히</summary> 
+
  - 정적 컨텐츠(Static Content)  
    ```
    서버에서 파일 '그대로' 웹 브라우저에 내려주는 것 (가공 X)  
@@ -183,8 +203,12 @@
        
        서버끼리 통신시 많이 사용(어떤 데이터가 왔다갔다하는지가 중요하기 때문에)
    ```
+</details>  
 
 ### 5-1. 정적 컨텐츠(Static Content)  
+<details>
+    <summary>자세히</summary> 
+
  - 스프링 부트 정적 컨텐츠 기능 [Static Content 참고](https://docs.spring.io/spring-boot/docs/2.3.12.RELEASE/reference/html/spring-boot-features.html#boot-features)  
    ![static 폴더 위치](https://velog.velcdn.com/images%2Fsong22861%2Fpost%2F168caf2a-d196-44cf-9281-ceb18d2dbc04%2FScreen%20Shot%202022-03-15%20at%2010.11.00%20PM.png)  
    [이미지 출처](https://velog.io/@song22861/5%ED%8E%B8-JAVA-spring-boot-study-%EC%A0%95%EC%A0%81-%EC%BB%A8%ED%85%90%EC%B8%A0)  
@@ -224,8 +248,12 @@
  - Reference  
    [song22861 정적컨텐츠](https://velog.io/@song22861/5%ED%8E%B8-JAVA-spring-boot-study-%EC%A0%95%EC%A0%81-%EC%BB%A8%ED%85%90%EC%B8%A0)  
    [추가정보 Knowledge Repository 정적 컨텐츠 커스텀](https://atoz-develop.tistory.com/entry/spring-boot-web-mvc-static-resources)  
-   
+</details>  
+
 ### 5-2. MVC와 템플릿 엔진  
+<details>
+    <summary>자세히</summary> 
+
  - MVC  
    `Model`, `View`, `Controller`  
    웹에서 화면을 출력하기 위해 내용을 담고, 보여주고, 전달해주는 소프트웨어 구현 방식중 하나
@@ -274,8 +302,12 @@
    템플릿 양식과 특정 데이터 모델에 따른 입력 자료를 합성하여 결과 문서를 출력하는 소프르웨어  
    > 쉽게 말해 html 파일을 브라우저로 그냥 보내주는 것이 아닌,  
      `서버에서 프로그래밍을 통해 동적으로 바꾸어서 보내주는 역할` 이라고 보면 된다.
-   
+</details>  
+
 ### 5-3. API  
+<details>
+    <summary>자세히</summary> 
+
  - API 방식  
    `브라우저에 데이터만 보내주고` 화면을 만드는 건 브라우저가 담당하도록 함  
    
@@ -336,12 +368,18 @@
    
    8. 웹 브라우저에 데이터 전달
    ```
-### 6. 회원관리 예제 - 백엔드 개발
+</details>  
+
+### 6. 회원관리 예제 - 백엔드 개발  
+<details>
+    <summary>자세히</summary> 
+
  - 비즈니스 요구사항 정리  
  - 회원 도메인과 리포지토리 만들기
  - 회원 리포지토리 테스트 케이스 작성
  - 회원 서비스 개발
  - 회원 서비스 테스트
+</details>  
 
 ### 6-1. 비즈니스 요구사항 정리   
 <details>
