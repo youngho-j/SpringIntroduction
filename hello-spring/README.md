@@ -26,6 +26,7 @@
 8-3. [조회 기능 추가](#8-3-조회-기능-추가)  
 9. [스프링 DB 접근 기술](#9-스프링-db-접근-기술)   
 9-1. [H2 데이터베이스 설치](#9-1-h2-데이터베이스-설치)  
+9-2. [순수 JDBC](#9-2-순수-jdbc)  
 
 ### 1. 프로젝트 생성  
 <details>
@@ -1327,4 +1328,274 @@
 
  - Reference  
    [세댕댕이 h2 데이터베이스 세팅 복구방법](https://sedangdang.tistory.com/152)  
+</details>  
+
+### 9-2. 순수 JDBC  
+<details>
+    <summary>자세히</summary>  
+
+ - 예전엔 이런식으로 설정을 했다 정도로만 보기  
+   
+
+ - 환경 설정
+   - build.gradle dependencies에 라이브러리 추가  
+     ```java
+     ...
+     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+     runtimeOnly'com.h2database:h2'
+     ...
+     ```  
+   
+   - application.properties에 Jdbc 연결 설정 추가  
+     - 경로 : src/main/resources/application.properties  
+     ```properties
+     spring.datasource.url=jdbc:h2:tcp://localhost/~/test
+     spring.datasource.driver-class-name=org.h2.Driver
+     ```
+ 
+ - JDBC Repository 구현  
+   ```java
+   public class JdbcMemberRepository implements MemberRepository {
+
+     private final DataSource dataSource;
+
+     public JdbcMemberRepository(DataSource dataSource) {
+       this.dataSource = dataSource;
+     }
+
+     @Override
+     public Member save(Member member) {
+       String sql = "insert into member(name) values(?)";
+
+       Connection conn = null;
+       PreparedStatement pstmt = null;
+       ResultSet rs = null;
+
+       try {
+         conn = getConnection();
+         pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+
+         pstmt.setString(1, member.getName());
+
+         pstmt.executeUpdate();
+         
+         rs = pstmt.getGeneratedKeys();
+
+       if (rs.next()) {
+         member.setId(rs.getLong(1));
+       } else {
+         throw new SQLException("id 조회 실패");
+       }
+         return member;
+       
+       } catch (Exception e) {
+         throw new IllegalStateException(e);
+       } finally {
+         close(conn, pstmt, rs);
+       }  
+     }
+
+     @Override
+     public Optional<Member> findById(Long id) {
+       String sql = "select * from member where id = ?";
+
+       Connection conn = null;
+       PreparedStatement pstmt = null;
+       ResultSet rs = null;
+
+       try {
+         conn = getConnection();
+         pstmt = conn.prepareStatement(sql);
+         pstmt.setLong(1, id);
+
+         rs = pstmt.executeQuery();
+
+         if(rs.next()) {
+           Member member = new Member();
+           member.setId(rs.getLong("id"));
+           member.setName(rs.getString("name"));
+         
+           return Optional.of(member);
+
+         } else {
+           return Optional.empty();
+         }
+
+       } catch (Exception e) {
+         throw new IllegalStateException(e);
+       } finally {
+         close(conn, pstmt, rs);
+       }
+     }
+
+     @Override
+     public List<Member> findAll() {
+       String sql = "select * from member";
+        
+       Connection conn = null;
+       PreparedStatement pstmt = null;
+       ResultSet rs = null;
+        
+       try {
+         conn = getConnection();
+         pstmt = conn.prepareStatement(sql);
+         rs = pstmt.executeQuery();
+        
+         List<Member> members = new ArrayList<>();
+        
+         while(rs.next()) {
+           Member member = new Member();
+           member.setId(rs.getLong("id"));
+           member.setName(rs.getString("name"));
+           members.add(member);
+         }
+        
+         return members;
+        
+       } catch (Exception e) {
+         throw new IllegalStateException(e);
+       } finally {
+         close(conn, pstmt, rs);
+       }
+     }
+
+     @Override
+     public Optional<Member> findByName(String name) {
+       String sql = "select * from member where name = ?";
+        
+       Connection conn = null;
+       PreparedStatement pstmt = null;
+       ResultSet rs = null;
+        
+       try {
+         conn = getConnection();
+         pstmt = conn.prepareStatement(sql);
+         pstmt.setString(1, name);
+         rs = pstmt.executeQuery();
+            
+         if(rs.next()) {
+           Member member = new Member();
+           member.setId(rs.getLong("id"));
+           member.setName(rs.getString("name"));
+           return Optional.of(member);
+         }
+            
+         return Optional.empty();
+        
+       } catch (Exception e) {
+         throw new IllegalStateException(e);
+       } finally {
+         close(conn, pstmt, rs);
+       }
+     }
+
+     private Connection getConnection() {
+       return DataSourceUtils.getConnection(dataSource);
+     }
+
+     private void close(Connection conn, PreparedStatement pstmt, ResultSet rs) {
+       try {
+         if(rs != null) {
+           rs.close();
+         }
+       } catch (SQLException e) {
+         e.printStackTrace();
+       }
+       
+       try {
+         if(pstmt != null) {
+           pstmt.close();
+         }
+       } catch (SQLException e) {
+         e.printStackTrace();
+       }
+       
+       try {
+         if(conn != null) {
+           close(conn);
+         }
+       } catch (SQLException e) {
+         e.printStackTrace();
+       }
+     }
+
+     private void close(Connection conn) throws SQLException {
+       DataSourceUtils.releaseConnection(conn, dataSource);
+     }
+   }
+   ```
+ 
+
+ - 스프링 설정 변경
+   ```java
+   @Configuration
+   public class SpringConfig {
+    
+     private final DataSource dataSource;
+    
+     public SpringConfig(DataSource dataSource) {
+       this.dataSource = dataSource;
+     }
+    
+     @Bean
+     public MemberService memberService() {
+       return new MemberService(memberRepository());
+     }
+    
+     @Bean
+     public MemberRepository memberRepository() {
+     //기존  return new MemoryMemberRepository();
+            return new JdbcMemberRepository(dataSource);
+     }
+   }  
+   ```  
+   
+   - DataSource는 데이터베이스 커넥션을 획득할 때 사용하는 객체  
+     스프링 부트는 데이터베이스 커넥션 정보를 바탕으로 DataSource를 생성하고  
+     스프링 빈으로 만들어두기 떄문에 DI를 받을 수 있다.
+
+   > 기존 사용하던 MemoryMemberRepository를 JdbcMemberRepository로만 변경하여  
+   > DB와 성공적으로 연결이 됨 [객체지향의 다형성](https://tecoble.techcourse.co.kr/post/2020-10-27-polymorphism/)      
+   > 
+   > `다형성`이란?  
+   > `하나의 타입에 여러 객체를 대입할 수 있는 성질`  
+   > 
+   > 다형성을 활용하면 기능을 확장하거나,  
+   > 객체를 변경해야할 때 타입 변경 없이 객체 주입만으로 수정이 일어나게 할 수 있다.  
+   > 
+   > 다형성 구현 방법  
+   > 대표적으로 `오버로딩`, `오버라이딩`, `함수형 인터페이스` 가 있음  
+   >  
+   > `오버로딩`  
+   > 매개변수만 다른 여러 개의 메소드를 구현   
+   > 즉, 여러 종류의 타입을 받아들여 결국엔 같은 기능을 하도록 만들기 위한 작업  
+   > 
+   > `오버라이딩`  
+   > 상위 클래스의 메서드를 하위 클래스에서 재정의  
+   > 구현부만 재정의
+   > 
+   > `함수형 인터페이스`  
+   > 람다식을 사용하기 위한 API로  
+   > 자바에서 제공하는 인터페이스에 구현할 메소드가 하나 뿐인 인터페이스
+ 
+
+ - 작업의 결과   
+   ![image](https://user-images.githubusercontent.com/65080004/166157895-91a88c75-f07a-4e47-bf8d-51f7ec3fbc81.png)  
+   - `개방-폐쇄 원칙(OCP, Open-Closed Principle)`  
+     확장에는 열려있고, 수정, 변경에는 닫혀있다.  
+     
+     > 기능을 추가하거나 변경해야 할 때  
+       이미 제대로 동작하고 있던 원래 코드를 변경하지 않아도,  
+       기존의 코드에 새로운 코드를 추가함으로써 기능의 추가나 변경이 가능  
+       
+     즉, MemoryMemberRepository를 변경하지 않고,  
+     JdbcMemberRepository를 추가함으로써 기능을 변경함  
+
+   - 스프링의 `DI (Dependencies Injection)`을 사용하면 `기존 코드를 전혀 손대지 않고,  
+     설정만으로 구현 클래스를 변경할 수 있음`  
+     
+ 
+ - Reference  
+   [Tecoble 객체지향의 다형성](https://tecoble.techcourse.co.kr/post/2020-10-27-polymorphism/)  
+   [위키백과 개방-폐쇄 원칙](https://ko.wikipedia.org/wiki/%EA%B0%9C%EB%B0%A9-%ED%8F%90%EC%87%84_%EC%9B%90%EC%B9%99)  
 </details>
