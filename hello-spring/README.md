@@ -1595,7 +1595,59 @@
      설정만으로 구현 클래스를 변경할 수 있음`  
      
  
+ - 스프링 통합 테스트  
+   - 스프링 컨테이너와 DB까지 연결한 통합 테스트  
+   ```java
+   @SpringBootTest
+   @Transactional
+   class MemberServiceIntefrationTest {
+     @Autowired
+     MemberService memberService;
+
+     @Autowired
+     MemberRepository memberRepository;
+
+     @Test
+     public void 회원가입() throws Exception {
+       //Given
+       Member member = new Member();
+       member.setName("hello");
+
+       //When
+       Long saveId = memberService.join(member);
+
+       //Then
+       Member findMember = memberRepository.findById(saveId).get();
+       assertEquals(member.getName(), findMember.getName());
+     }
+
+     @Test
+     public void 중복_회원_예외() throws Exception {
+       //Given
+       Member member1 = new Member();
+       member1.setName("Test");
+       Member member2 = new Member();
+       member2.setName("Test");
+
+       //When
+       memberService.join(member1);
+       IllegalStateException e = assertThrows(IllegalStateException.class,
+         () -> memberService.join(member2));
+
+       //Then
+       assertThat(e.getMessage()).isEqualTo("이미 존재하는 회원입니다.");
+     }
+   }
+   ```  
+   - `@SpringBootTest`  
+     스프링 컨테이너와 테스트를 함께 실행  
+   - `@Transactional`  
+     테스트 케이스에 이 애노테이션이 있으면, `테스트 시작 전에 트랜잭션을 시작`하고,  
+     `테스트 완료 후에 항상 롤백`  
+     이렇게 하면 DB에 데이터가 남지 않으므로 `다음 테스트에 영향을 주지 않음`
+
  - Reference  
    [Tecoble 객체지향의 다형성](https://tecoble.techcourse.co.kr/post/2020-10-27-polymorphism/)  
    [위키백과 개방-폐쇄 원칙](https://ko.wikipedia.org/wiki/%EA%B0%9C%EB%B0%A9-%ED%8F%90%EC%87%84_%EC%9B%90%EC%B9%99)  
+
 </details>
