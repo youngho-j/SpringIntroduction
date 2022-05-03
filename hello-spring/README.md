@@ -27,6 +27,7 @@
 9. [스프링 DB 접근 기술](#9-스프링-db-접근-기술)   
 9-1. [H2 데이터베이스 설치](#9-1-h2-데이터베이스-설치)  
 9-2. [순수 JDBC](#9-2-순수-jdbc)  
+9-3. [스프링 통합 테스트](#9-3-스프링-통합-테스트)  
 
 ### 1. 프로젝트 생성  
 <details>
@@ -1211,6 +1212,7 @@
  - 스프링 데이터 엑세스  
    - H2 데이터베이스 설치
    - 순수 JDBC  
+   - 스프링 통합 테스트  
    - 스프링 JDBCTemplate  
    - JPA  
    - 스프링 데이터 JPA  
@@ -1594,9 +1596,19 @@
    - 스프링의 `DI (Dependencies Injection)`을 사용하면 `기존 코드를 전혀 손대지 않고,  
      설정만으로 구현 클래스를 변경할 수 있음`  
      
- 
- - 스프링 통합 테스트  
-   - 스프링 컨테이너와 DB까지 연결한 통합 테스트  
+
+ - Reference  
+   [Tecoble 객체지향의 다형성](https://tecoble.techcourse.co.kr/post/2020-10-27-polymorphism/)  
+   [위키백과 개방-폐쇄 원칙](https://ko.wikipedia.org/wiki/%EA%B0%9C%EB%B0%A9-%ED%8F%90%EC%87%84_%EC%9B%90%EC%B9%99)  
+
+</details>  
+
+### 9-3. 스프링 통합 테스트  
+<details>
+    <summary>자세히</summary>  
+
+ - 스프링 통합 테스트
+   - 스프링 컨테이너와 DB까지 연결한 통합 테스트
    ```java
    @SpringBootTest
    @Transactional
@@ -1639,15 +1651,18 @@
      }
    }
    ```  
+   - 테스트는 사실 제일 끝단에 위치하고, 가져다 쓸게 아니기 떄문에 제일 편한 방법을 쓰면 됨  
+     따라서, @Autowired를 필드주입으로 사용  
+   
+   - 가급적 스프링 컨테이너, DB 연동하여 진행하는 통합 테스트 보다 순수한 자바코드 단위테스트가  
+     좋은 테스트일 확률이 높다. `기능을 작게 나누어 단위테스트 만드는 연습해보기`  
+  
    - `@SpringBootTest`  
-     스프링 컨테이너와 테스트를 함께 실행  
+     스프링 컨테이너와 테스트를 함께 실행
+   
    - `@Transactional`  
      테스트 케이스에 이 애노테이션이 있으면, `테스트 시작 전에 트랜잭션을 시작`하고,  
      `테스트 완료 후에 항상 롤백`  
-     이렇게 하면 DB에 데이터가 남지 않으므로 `다음 테스트에 영향을 주지 않음`
-
- - Reference  
-   [Tecoble 객체지향의 다형성](https://tecoble.techcourse.co.kr/post/2020-10-27-polymorphism/)  
-   [위키백과 개방-폐쇄 원칙](https://ko.wikipedia.org/wiki/%EA%B0%9C%EB%B0%A9-%ED%8F%90%EC%87%84_%EC%9B%90%EC%B9%99)  
-
+     이렇게 하면 DB에 데이터가 남지 않으므로 `다음 테스트에 영향을 주지 않음`  
+     
 </details>
