@@ -29,6 +29,7 @@
 9-2. [순수 JDBC](#9-2-순수-jdbc)  
 9-3. [스프링 통합 테스트](#9-3-스프링-통합-테스트)  
 9-4. [스프링 JDBC Template](#9-4-스프링-jdbc-template)  
+9-5. [JPA](#9-5-jpa)  
 
 ### 1. 프로젝트 생성  
 <details>
@@ -1763,6 +1764,44 @@
      //순수JDBC - return new JdbcMemberRepository(dataSource);
        return new JdbcTemplateMemberRepository(dataSource);
      }
+   ```
+   
+</details>  
+
+### 9-5. JPA  
+<details>
+    <summary>자세히</summary>  
+
+ - JPA 사용시 장점  
+   > - 기존의 반복 코드는 물론이고, 기본적인 SQL도 직접 만들어서 실행해준다.  
+   > - SQL과 데이터 중심의 설계에서 `객체 중심의 설계로 패러다임을 전환`을 할 수 있다.  
+   > - 개발 생산성을 크게 높일 수 있다.  
+ 
+ - build.gradle JPA 관련 라이브러리 추가  
+   ```java
+   dependencies {
+     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+     implementation 'org.springframework.boot:spring-boot-starter-web'
+     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+     runtimeOnly'com.h2database:h2'
+     testImplementation('org.springframework.boot:spring-boot-starter-test') {
+       exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+     }
+   }  
    ```  
+   > - spring-boot-starter-data-jpa는 내부에 jdbc 관련 라이브러리를 포함  
+    
+ - application.properties에 JPA 설정 추가
+   ```properties
+   # 추가한 코드만 작성
+
+   spring.jpa.show-sql=true
+   spring.jpa.hibernate.ddl-auto=none
+   ```
+   - `show-sql` : JPA가 생성하는 SQL 출력  
+   - `ddl-auto` : 테이블을 자동으로 생성하는 기능 제공(옵션에 따라 달라짐)  
+      - none - 자동 생성 해제  
+      - create - 자동 생성  
+    
    
 </details>
