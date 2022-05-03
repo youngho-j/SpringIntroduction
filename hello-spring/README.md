@@ -28,6 +28,7 @@
 9-1. [H2 데이터베이스 설치](#9-1-h2-데이터베이스-설치)  
 9-2. [순수 JDBC](#9-2-순수-jdbc)  
 9-3. [스프링 통합 테스트](#9-3-스프링-통합-테스트)  
+9-4. [스프링 JDBC Template](#9-4-스프링-jdbc-template)  
 
 ### 1. 프로젝트 생성  
 <details>
@@ -1213,7 +1214,7 @@
    - H2 데이터베이스 설치
    - 순수 JDBC  
    - 스프링 통합 테스트  
-   - 스프링 JDBCTemplate  
+   - 스프링 JDBC Template  
    - JPA  
    - 스프링 데이터 JPA  
     
@@ -1665,4 +1666,103 @@
      `테스트 완료 후에 항상 롤백`  
      이렇게 하면 DB에 데이터가 남지 않으므로 `다음 테스트에 영향을 주지 않음`  
      
+</details>  
+
+### 9-4. 스프링 JDBC Template
+<details>
+    <summary>자세히</summary>  
+
+ - 순수 JDBC와 동일한 환경설정을 하면 됨  
+ - 스프링 JDBC Template과 MyBatis 같은 라이브러리는  
+   JDBC API에서 본 반복 코드를 대부분 제거해주나, SQL은 직접 작성 필요  
+ - `테스트 코드를 잘 짜는게 매우 중요!!`  
+   
+ - JDBC Template Repository 생성
+   ```java
+   package hello.hellospring.repository;
+   
+   public class JdbcTemplateMemberRepository implements MemberRepository {
+
+     private final JdbcTemplate jdbcTemplate;
+
+     @Autowired
+     public JdbcTemplateMemberRepository(DataSource dataSource) {
+       this.jdbcTemplate = new JdbcTemplate(dataSource);
+     }
+
+     @Override
+     public Member save(Member member) {
+       SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
+
+       jdbcInsert.withTableName("member").usingGeneratedKeyColumns("id");
+
+       Map<String, Object> parameters = new HashMap<>();
+
+       parameters.put("name", member.getName());
+
+       Number key = jdbcInsert.executeAndReturnKey(new
+         MapSqlParameterSource(parameters));
+
+       member.setId(key.longValue());
+
+       return member;
+     }
+
+     @Override
+     public Optional<Member> findById(Long id) {
+       List<Member> result = 
+         jdbcTemplate.query("select * from member where id = ?", memberRowMapper(), id);
+       return result.stream().findAny();
+     }
+
+     @Override
+     public Optional<Member> findByName(String name) {
+       List<Member> result = 
+         jdbcTemplate.query("select * from member where name = ?", memberRowMapper(), name);
+       return result.stream().findAny();
+     }
+
+     @Override
+     public List<Member> findAll() {
+       return jdbcTemplate.query("select * from member", memberRowMapper());
+     }
+
+     private RowMapper<Member> memberRowMapper() {
+       return new RowMapper<Member>() {
+         @Override
+         public Member mapRow(ResultSet rs, int rowNum) throws SQLException {
+           Member member = new Member();
+           member.setId(rs.getLong("id"));
+           member.setName(rs.getString("name"));
+           return member;
+         }
+       };
+     }
+   }
+   ```   
+
+ - SpringConfig 설정 변경   
+   ```java
+   @Configuration
+   public class SpringConfig {
+
+     private final DataSource dataSource;
+
+     public SpringConfig(DataSource dataSource) {
+       this.dataSource = dataSource;
+     }
+
+     @Bean
+     public MemberService memberService() {
+       return new MemberService(memberRepository());
+     }
+
+     @Bean
+     public MemberRepository memberRepository() {
+     //메모리 - return new MemoryMemberRepository();
+     //순수JDBC - return new JdbcMemberRepository(dataSource);
+       return new JdbcTemplateMemberRepository(dataSource);
+     }
+   ```  
+   
 </details>
