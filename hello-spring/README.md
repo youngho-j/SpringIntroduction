@@ -1803,5 +1803,187 @@
       - none - 자동 생성 해제  
       - create - 자동 생성  
     
+ - JPA(ava Persistence API)  
+   - Java 진영에서 ORM(Object-Relational Mapping) 기술 표준으로 사용되는 `인터페이스`의 모음  
+     > 실제 구현된 것이 아니라 `구현된 클래스와 매핑을 해주기 위해 사용되는 프레임워크`  
+     
+   - 자바 어플리케이션에서 관계형 데이터베이스를 사용하는 방식을 정의한 `인터페이스`  
+     
+   - ORM 기술  
+     > `Object` - 객체  
+     `Relational` - 관계형 데이터 베이스 테이블  
+     `Mapping` - 매핑(어노테이션 사용)  
+     > - `객체와 관계형 데이터 베이스 테이블을 어노테이션을 사용해 매핑`  
+     
+   - 구현체 hibernate 등.. 여러 구현체가 있음
+     
+
+ - Member.class 수정  
+   ```java
+   @Entity
+   public class Member {
+
+     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+     private Long id;
+     private String name;
+
+     public Long getId() {
+       return id;
+     }
+
+     public void setId(Long id) {
+       this.id = id;
+     }
+
+     public String getName() {
+       return name;
+     }
+
+     public void setName(String name) {
+       this.name = name;
+     }
+   }
+   ```  
+   - `@Entity`  
+     - @Entity가 붙은 클래스는 `JPA가 관리하는 클래스`, `엔티티`라고 함  
+     - JPA를 사용하여 테이블과 매핑할 클래스는 반드시 @Entity 를 붙여야 함  
+     - 속성  
+       - `name`  
+         - 형식 : @Entity(name = "Member")
+         - JPA에서 사용할 엔티티 이름을 지정  
+         - 속성을 적용하지 않을 경우 클래스 이름을 사용함  
+         - 같은 클래스명이 존재하지 않을 경우 클래스 명을 사용하는게 좋음  
+     - 생성시 주의할 점  
+       - 기본 생성자 필수  
+         - 파라미터가 없는 public 또는 protected 생성자가 필요함
+         - JPA spec으로 규정됨
+           - JPA를 구현해서 쓰는 라이브러리들이 다양한 기술(Ex. Reflection)을 사용하여
+             `객체를 프록싱 할 때 필요하기 때문`  
+       - final 클래스, enum, interface, inner 클래스는 엔티티로 사용할 수 없음  
+       - DB에 저장하려는 필드에는 final을 사용할 수 없음  
    
+   - `@Id`  
+     - pk 매핑  
+   
+   - `@GeneratedValue(trategy = GenerationType.IDENTITY)`  
+     - 기본키를 자동으로 생성하기 위해 `@Id`와 함께 사용  
+     - 기본키 생성을 데이터베이스에게 위임하는 방식  
+       -  id값을 따로 할당하지 않아도 데이터베이스가 자동으로  
+          AUTO_INCREMENT를 하여 기본키를 생성  
+     - IDENTITY 전략  
+       1. EntityManager.persist()를 하는 시점에 Insert SQL을 실행  
+       2. 데이터베이스에서 식별자를 조회
+       3. 영속성 컨텍스트 1차 캐시에 값을 넣어 관리가 가능하도록 함  
+       
+       - EntityManager.persist()를 하는 시점에   
+         Insert SQL을 실행하여 데이터베이스에서 식별자를 조회하는 이유?  
+         > 영속성 컨텍스트는 1차 캐시에 PK(기본키)와 객체를 가지고 관리를 함  
+           하지만 PK 생성을 데이터 베이스에 위임을 했기 때문에  
+           데이터 베이스에 값을 넣기 전까지 PK를 알 수 없어 관리를 할 수 없으므로 
+ 
+ - JpaMemberRepository 생성  
+   ```java
+   public class JpaMemberRepository implements MemberRepository {
+
+     private final EntityManager entityManager;
+
+     public JpaMemberRepository(EntityManager entityManager) {
+       this.entityManager = entityManager;
+     }
+
+     @Override
+     public Member save(Member member) {
+       entityManager.persist(member);
+       return member;
+     }
+
+     @Override
+     public Optional<Member> findById(Long id) {
+       Member member = entityManager.find(Member.class, id);
+       return Optional.ofNullable(member);
+     }
+
+     @Override
+     public Optional<Member> findByName(String name) {
+       return entityManager
+               .createQuery("select m from Member m where m.name = :name", Member.class)
+               .setParameter("name", name)
+               .getResultList()
+               .stream().findAny();
+     }
+
+     @Override
+     public List<Member> findAll() {
+       return entityManager.createQuery("select m from Member m", Member.class)
+               .getResultList();
+     }
+   }
+   ```
+   - JPA는 EntityManager로 모든 것이 동작을 함  
+     - build.gradle에 'org.springframework.boot:spring-boot-starter-data-jpa' 라이브러리를  
+       추가 함으로써 스프링 부트가 자동으로 EntityManager를 생성해줌  
+   - JPQL  
+     - Java Persistence Query Language
+     - 엔티티 객체를 대상으로 쿼리를 질의  
+    
+ 
+ - MemberService 수정 
+   - 주의! JPA를 사용하여 데이터 변경시 항상 @Transactional이 적용 되어야함  
+   ```java
+   @Transactional
+   public class MemberService {
+
+     private final MemberRepository memberRepository;
+
+     public MemberService(MemberRepository memberRepository) {
+       this.memberRepository = memberRepository;
+     }
+
+     /*
+     * 회원가입
+     * */
+     public Long join(Member member) {
+
+       validateDuplicateMember(member); //중복 회원 검증
+       memberRepository.save(member);
+       return member.getId();
+     }
+
+     ...
+
+   }
+   ``` 
+ 
+ - SpringConfig 수정  
+   ```java
+   @Configuration
+   public class SpringConfig {
+
+     private final EntityManager em;
+
+     @Autowired
+     public SpringConfig(EntityManager em) {
+       this.em = em;
+     }
+
+     @Bean
+     public MemberService memberService() {
+       return new MemberService(memberRepository());
+     }
+
+     @Bean
+     public MemberRepository memberRepository() {
+     //메모리 - return new MemoryMemberRepository();
+     //순수 JDBC - return new JdbcMemberRepository(dataSource);
+     //JDBC Template - return new JdbcTemplateMemberRepository(dataSource);
+       return new JpaMemberRepository(em);
+     }
+   } 
+   ```  
+   
+ - Reference  
+   [gmlwjd9405 JPA 엔티티 매핑 방법](https://gmlwjd9405.github.io/2019/08/11/entity-mapping.html)    
+   [UkJJang @GeneratedValue 전략](https://velog.io/@gudnr1451/GeneratedValue-%EC%A0%95%EB%A6%AC)   
+   [개발자의 기록습관 JPQL](https://ict-nroo.tistory.com/116)  
+    
 </details>
