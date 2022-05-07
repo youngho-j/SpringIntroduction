@@ -30,6 +30,7 @@
 9-3. [스프링 통합 테스트](#9-3-스프링-통합-테스트)  
 9-4. [스프링 JDBC Template](#9-4-스프링-jdbc-template)  
 9-5. [JPA](#9-5-jpa)  
+9-6. [스프링 데이터 JPA](#9-6-스프링-데이터-jpa)  
 
 ### 1. 프로젝트 생성  
 <details>
@@ -1986,4 +1987,84 @@
    [UkJJang @GeneratedValue 전략](https://velog.io/@gudnr1451/GeneratedValue-%EC%A0%95%EB%A6%AC)   
    [개발자의 기록습관 JPQL](https://ict-nroo.tistory.com/116)  
     
+</details>
+
+### 9-6. 스프링 데이터 JPA  
+<details>
+    <summary>자세히</summary>  
+
+ - 스프링 데이터 JPA  
+   > JPA를 편리하게 사용하도록 도와주는 기술  
+   > JPA를 먼저 학습 후에 학습해야함
+   
+ - 스프링 데이터 JPA 회원 리포지토리 생성  
+   - `인터페이스`로 생성함!
+   ```java
+   package com.hello.hellospring.repository;
+
+   public interface SpringDataJpaMemberRepository 
+                      extends JpaRepository<Member, Long>, MemberRepository {
+    
+     @Override
+     Optional<Member> findByName(String name);
+   } 
+   ```
+   - 인터페이스는 `다중 상속이 가능함`  
+   - JpaRepository<T, ID> Interface  
+     - 미리 범용적인 검색 메서드를 정의해 놓은 인터페이스  
+     - T : 엔티티 클래스 이름
+     - ID : PK 타입(기본형일 경우 Wrapper 클래스로 지정해야함)
+    
+
+ - SpringConfig 변경  
+   ```java
+   @Configuration
+   public class SpringConfig {
+
+     private final MemberRepository memberRepository;
+
+     @Autowired
+     public SpringConfig(MemberRepository memberRepository) {
+       this.memberRepository = memberRepository;
+     }
+
+     @Bean
+     public MemberService memberService() {
+       return new MemberService(memberRepository);
+     }
+   }
+   ```  
+   - 구현체가 없는데 memberRepository를 어떻게 가져오는가?  
+     > 스프링 데이터 JPA가  
+       SpringDataJpaMemberRepository  
+               extends JpaRepository<Member, Long>, MemberRepository 코드에서  
+     > 
+     >  JpaRepository를 확인 후 구현체를 자동으로 만들고 스프링 빈에 등록  
+     > 
+     >  우리는 만들어진 빈을 가져다 쓰기만 하면 된다.  
+   
+   - 원리  
+     - 스프링 데이터 JPA가 프록시 기술을 통해 SpringDataJpaMemberRepository를 보고  
+       객체를 생성해 스프링 빈을 등록해줌  
+       
+
+   - 스프링 데이터 제공 클래스  
+     ![image](https://user-images.githubusercontent.com/65080004/167233140-a0e25f45-5e82-4be7-811b-e2d62ad78444.png)  
+     - 인터페이스를 통한 기본적인 CRUD 기능 제공
+     - `findByName()` , `findByEmail()` 처럼 메서드 이름 만으로 조회 기능 제공  
+     -  페이징 기능 자동 제공  
+   
+
+   - 참고  
+     > 실무에서는
+     > 
+     > `JPA + 스프링 데이터 JPA` 조합을 기본으로 사용  
+       `복잡한 동적 쿼리`의 경우 `Querydsl 라이브러리` 사용  
+       위의 조합으로도 `해결이 어려울 경우`  
+       `JPA 제공 네이티브 쿼리 or 스프링 JdbcTemplate` 사용  
+   
+
+ - Reference  
+   [프로그램 개발 지식 공유 JpaRepository 이용](https://araikuma.tistory.com/329)  
+
 </details>
