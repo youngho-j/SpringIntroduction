@@ -31,6 +31,9 @@
 9-4. [스프링 JDBC Template](#9-4-스프링-jdbc-template)  
 9-5. [JPA](#9-5-jpa)  
 9-6. [스프링 데이터 JPA](#9-6-스프링-데이터-jpa)  
+10. [AOP](#10-aop)  
+10-1. [AOP가 필요한 상황](#10-1-aop가-필요한-상황)  
+    
 
 ### 1. 프로젝트 생성  
 <details>
@@ -2067,4 +2070,97 @@
  - Reference  
    [프로그램 개발 지식 공유 JpaRepository 이용](https://araikuma.tistory.com/329)  
 
+</details>
+
+### 10. AOP  
+<details>
+    <summary>자세히</summary>
+
+ - AOP가 필요한 상황
+ - AOP 적용  
+
+</details>
+
+### 10-1. AOP가 필요한 상황  
+<details>
+    <summary>자세히</summary>  
+
+ - AOP는 `언제 왜 쓰는지 알면` 쉽게 사용가능  
+   - `공통 관심 사항`(cross-cutting concern) vs `핵심 관심사항`(core concern)
+
+
+ - AOP가 필요한 상황
+   - 모든 메서드의 호출 시간을 측정하고 싶다면?  
+     > Controller, Service, Repostiory에 시간 측정 로직으로 포함 시켜야 되는가?  
+       위의 상황대로 로직을 포함시켜서 개발을 완료하였을때  
+       추가적으로 시간 측정 단위를 ms로 수정하게 된다면?  
+     
+   - 예제
+     ```java
+     package hello.hellospring.service;
+     
+     @Transactional
+     public class MemberService {
+
+       private final MemberRepository memberRepository;
+
+       public MemberService(MemberRepository memberRepository) {
+         this.memberRepository = memberRepository;
+       }
+
+       /*
+       * 회원가입
+       * */
+       public Long join(Member member) {
+
+         long start  = System.currentTimeMillis();
+       
+         try {
+
+           validateDuplicateMember(member); //중복 회원 검증
+           memberRepository.save(member);
+           return member.getId();
+       
+         } finally {
+       
+           long finish = System.currentTimeMillis();
+           long timeMs = finish - start;
+           System.out.println("join = " + timeMs + "ms");
+       
+         }
+       }
+
+       ...
+
+       /*
+       * 전체 회원 조회
+       * */
+       public List<Member> findMembers() {
+        
+         long start  = System.currentTimeMillis();
+       
+         try {
+       
+           return memberRepository.findAll();
+       
+         } finally {
+       
+           long finish  = System.currentTimeMillis();
+           long timeMs = finish - start;
+           System.out.println("findMembers = " + timeMs + "ms");
+       
+         }
+       }
+     
+       ...
+     }
+     ```
+   
+   - 위 예제의 문제점  
+     - 회원가입, 회원조회 `시간을 측정하는 기능`은 `핵심 관심사항(핵심 비즈니스 로직)이 아니다`
+     - `시간을 측정하는 로직`은 `공통 관심 사항`이다
+     - 시간을 측정하는 로직과 핵심 비즈니스의 로직이 섞여서 `유지보수가 어렵다`
+     - 시간을 측정하는 로직을 `별도의 공통 로직으로 만들기 매우 어렵다`
+     - 시간을 측정하는 로직을 `변경할 때 모든 로직을 찾아가면서 변경해야 한다`
+   
 </details>
