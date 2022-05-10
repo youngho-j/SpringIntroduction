@@ -2164,3 +2164,69 @@
      - 시간을 측정하는 로직을 `변경할 때 모든 로직을 찾아가면서 변경해야 한다`
    
 </details>
+
+### 10-2. AOP 적용
+<details>
+    <summary>자세히</summary>
+
+ - AOP?  
+   - Aspect Oriented Programming  
+   - `공통 관심 사항`(cross-cutting concern)과 `핵심 관심사항`(core concern)을 분리  
+    
+   ![image](https://user-images.githubusercontent.com/65080004/167298627-bc3c9751-bb4c-48a9-8c18-2742213781c9.png)  
+
+ - 시간 측정 AOP 등록  
+   ```java
+   @Aspect
+   @Component
+   public class TimeTraceAop {
+
+     @Around("execution(* hello.hellospring..*(..))")
+     public  Object execute(ProceedingJoinPoint joinPoint) throws Throwable {
+       long start = System.currentTimeMillis();
+       System.out.println("START : " + joinPoint.toString());
+       try {
+         return joinPoint.proceed();
+       } finally {
+         long finish = System.currentTimeMillis();
+         long timeMS = finish - start;
+         System.out.println("END : " + joinPoint.toString() + " " + timeMS + "ms");
+       }
+     }
+   }
+   ``` 
+   - `@Aspect`  
+     공통 기능을 제공하는 Aspect 클래스를 선언하기 위한 어노테이션  
+   - `@Around`  
+     타겟 메서드를 감싸서 타켓 메서드를 호출 전과 후에  
+     특정 Advice(실질적인 부가기능을 담은 구현체, 위의 execute 메서드)를 실행한다는 의미  
+   - `execution(* hello.hellospring..*(..))`  
+     hello.hellospring 아래의 모든 패키지 경로에 Aspect를 적용하겠다는 의미  
+   
+   - 보통 @Around는 pakage 레벨로 적용함
+   - 회원 가입, 회원 조회 등 핵심 관심사항과 시간을 측정하는 공통 관심사항을 분리  
+   - 시간을 측정하는 로직을 별도의 공통 로직으로 생성  
+   - 변경이 필요할 경우 해당 로직만 변경하면 됨    
+   - 적용하고자하는 대상을 선택하여 적용 가능  
+    
+   
+ - AOP 동작 방식
+   - AOP 적용 전  
+     ![image](https://user-images.githubusercontent.com/65080004/167574431-c017b416-58b0-46a0-ab9f-b56594471ffe.png)  
+     - Controller에서 Service 의존 관계 호출   
+         
+   - AOP 적용 후 의존 관계  
+     ![image](https://user-images.githubusercontent.com/65080004/167399710-4e07dead-67b4-4757-86ff-e83ec71f2e9a.png)  
+     - AOP를 적용할 경로를 지정
+     - 프록시 기술을 통해 가짜 MemberService 생성 
+     - 컨테이너에 스프링 빈 등록시 가짜 스프링 빈을 호출
+     - 가짜 스프링 빈의 로직 수행  
+     - joinPoint.preceed()를 통해 실제 MemberService 호출  
+   
+   - AOP 적용 전 전체 흐름  
+     ![image](https://user-images.githubusercontent.com/65080004/167576307-4964b18d-5dc0-41b8-abb5-d33c7a8fdd3c.png)  
+     
+   - AOP 적용 후 전체 흐름  
+     ![image](https://user-images.githubusercontent.com/65080004/167399876-6adb0a1d-6af2-4898-8ca0-97c741034b79.png)  
+     
+</details>
